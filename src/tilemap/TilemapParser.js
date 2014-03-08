@@ -141,12 +141,6 @@ Phaser.TilemapParser = {
     */
     parseTiledJSON: function (json) {
 
-        if (json.orientation !== 'orthogonal')
-        {
-            console.warn('TilemapParser.parseTiledJSON: Only orthogonal map types are supported in this version of Phaser');
-            return null;
-        }
-
         //  Map data will consist of: layers, objects, images, tilesets, sizes
         var map = {};
 

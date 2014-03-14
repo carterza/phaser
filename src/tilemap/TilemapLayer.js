@@ -297,8 +297,16 @@ Phaser.TilemapLayer.prototype.postUpdate = function () {
     //  Stops you being able to auto-scroll the camera if it's not following a sprite
     this.scrollX = this.game.camera.x * this.scrollFactorX;
     this.scrollY = this.game.camera.y * this.scrollFactorY;
-
-    this.render();
+    
+    if (this.map.orientation === 'orthogonal')
+    {
+        this.render();
+    }
+    
+    else if (this.map.orientation === 'isometric')
+    {
+        this.renderIsometric();
+    }
 
 }
 
@@ -555,6 +563,138 @@ Phaser.TilemapLayer.prototype.updateMax = function () {
 Phaser.TilemapLayer.prototype.render = function () {
 
 	if (this.layer.dirty)
+    {
+        this.dirty = true;
+    }
+
+    if (!this.dirty || !this.visible)
+    {
+        return;
+    }
+
+    this._prevX = this._dx;
+    this._prevY = this._dy;
+
+    this._dx = -(this._x - (this._startX * this.map.tileWidth));
+    this._dy = -(this._y - (this._startY * this.map.tileHeight));
+
+    this._tx = this._dx;
+    this._ty = this._dy;
+
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.context.fillStyle = this.tileColor;
+
+    var tile;
+    var set;
+    var ox = 0;
+    var oy = 0;
+
+    if (this.debug)
+    {
+        this.context.globalAlpha = this.debugAlpha;
+    }
+
+    for (var y = this._startY, lenY = this._startY + this._maxY; y < lenY; y++)
+    {
+        this._column = this.layer.data[y];
+
+        for (var x = this._startX, lenX = this._startX + this._maxX; x < lenX; x++)
+        {
+            if (this._column[x])
+            {
+                tile = this._column[x];
+
+                if (this.map.tiles[tile.index])
+                {
+                    set = this.map.tilesets[this.map.tiles[tile.index][2]]
+
+                    if (set.image)
+                    {
+                        if (this.debug === false && tile.alpha !== this.context.globalAlpha)
+                        {
+                            this.context.globalAlpha = tile.alpha;
+                        }
+
+                        if (set.tileWidth !== this.map.tileWidth || set.tileHeight !== this.map.tileHeight)
+                        {
+                            //  TODO: Smaller sized tile check
+                            this.context.drawImage(
+                                this.map.tilesets[this.map.tiles[tile.index][2]].image,
+                                this.map.tiles[tile.index][0],
+                                this.map.tiles[tile.index][1],
+                                set.tileWidth,
+                                set.tileHeight,
+                                Math.floor(this._tx),
+                                Math.floor(this._ty) - (set.tileHeight - this.map.tileHeight),
+                                set.tileWidth,
+                                set.tileHeight
+                            );
+                        }
+                        else
+                        {
+                            this.context.drawImage(
+                                this.map.tilesets[this.map.tiles[tile.index][2]].image,
+                                this.map.tiles[tile.index][0],
+                                this.map.tiles[tile.index][1],
+                                this.map.tileWidth,
+                                this.map.tileHeight,
+                                Math.floor(this._tx),
+                                Math.floor(this._ty),
+                                this.map.tileWidth,
+                                this.map.tileHeight
+                            );
+                        }
+
+                        if (tile.debug)
+                        {
+                            this.context.fillStyle = 'rgba(0, 255, 0, 0.4)';
+                            this.context.fillRect(Math.floor(this._tx), Math.floor(this._ty), this.map.tileWidth, this.map.tileHeight);
+                        }
+                    }
+                    else
+                    {
+                        this.context.fillRect(Math.floor(this._tx), Math.floor(this._ty), this.map.tileWidth, this.map.tileHeight);
+                    }
+                }
+            }
+
+            this._tx += this.map.tileWidth;
+
+        }
+
+        this._tx = this._dx;
+        this._ty += this.map.tileHeight;
+
+    }
+
+    if (this.debug)
+    {
+        this.context.globalAlpha = 1;
+        this.renderDebug();
+    }
+
+    //  Only needed if running in WebGL, otherwise this array will never get cleared down I don't think!
+    if (this.game.renderType === Phaser.WEBGL)
+    {
+        PIXI.texturesToUpdate.push(this.baseTexture);
+    }
+
+    this.dirty = false;
+    this.layer.dirty = false;
+
+    return true;
+
+}
+
+/**
+* Renders the tiles to the isometric layer canvas and pushes to the display.
+* @method Phaser.TilemapLayer#renderIsometric
+* @memberof Phaser.TilemapLayer
+*/
+Phaser.TilemapLayer.prototype.renderIsometric = function () {
+
+    if (this.layer.dirty)
     {
         this.dirty = true;
     }

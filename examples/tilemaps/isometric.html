@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <title>hello phaser!</title>
-        <script src="phaser.min.js"></script>
+        <script src="phaser.js"></script>
     </head>
     <body>
 
@@ -13,10 +13,8 @@
         var game = new Phaser.Game(1024, 768, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 
         function preload() {
-
             game.load.tilemap('frontier', '../assets/tilemaps/maps/frontier_outpost.json', null, Phaser.Tilemap.TILED_JSON);
             game.load.image('tiles', '../assets/tilemaps/tiles/grassland.png');
-            
         }
 
         var map;

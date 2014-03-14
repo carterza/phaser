@@ -141,7 +141,7 @@ Phaser.TilemapParser = {
     */
     parseTiledJSON: function (json) {
     
-        if (json.orientation !== 'orthogonal' || json.orientation !== 'isometric')
+        if (json.orientation !== 'orthogonal' && json.orientation !== 'isometric')
         {
             console.warn('TilemapParser.parseTiledJSON: Only orthogonal and isometric map types are supported in this version of Phaser');
             return null;
